@@ -20,27 +20,25 @@ type selpgArgs struct {
 
 var progname string
 
-
 func getSelpg(arg *selpgArgs) {
 	flag.IntVar(&(arg.start), "s", -1, "Start page..")
 	flag.IntVar(&(arg.end), "e", -1, "End page.")
 	flag.IntVar(&(arg.pagelen), "l", 72, "Line number per page.")
 	flag.BoolVar(&(arg.page_seperator), "f", false, "use [-f=true] to seperate pages")
 	flag.StringVar(&(arg.dest), "d", "", "Destionation of output.")
-
 	flag.Parse()
 
 	if arg.start == -1 || arg.end == -1 {
 		printErr("not enough arguments!")
 	}
 	if len(flag.Args()) > 1 {
-		printErr("can't read more than one file!")
+		printErr("can only read one file!")
 	}
 	if arg.start < 1 {
 		printErr("start page can't less than 1!")
 	}
 	if arg.end < arg.start {
-		printErr("end page need grater than or equal to start page!")
+		printErr("start page should <= end page!")
 	}
 	if arg.pagelen < 1 {
 		printErr("page length can't less than 1!")
@@ -82,13 +80,12 @@ func run() {
 		}
 	}
 
-	var line string
-	pageNum := 1
 	inReader := bufio.NewReader(fin)
 	outfile_text := ""
+	pageNum := 1
+	lineNum := 0
 	if args.page_seperator == false {
-		lineNum := 0
-
+		var line string
 		for true {
 			line, err = inReader.ReadString('\n')
 			if err != nil {
@@ -136,18 +133,16 @@ func run() {
 	}
 
 	if pageNum < args.start {
-		fmt.Fprintf(os.Stderr, "%s: start_page (%d) greater than total pages (%d), no output\n", progname, args.start, pageNum)
-	} else {
-		if pageNum < args.end {
-			fmt.Fprintf(os.Stderr, "%s: end_page (%d) greater than total pages (%d), less output\n", progname, args.end, pageNum)
-		}
+		fmt.Fprintf(os.Stderr, "%s: start_page greater than total pages, no output\n", progname)
+	}
+	if pageNum >= args.start && pageNum < args.end {
+		fmt.Fprintf(os.Stderr, "%s: end_page greater than total pages, less output\n", progname)
 	}
 
+	fmt.Fprintf(os.Stderr, "%s: Commond Done\n", progname)
 	fin.Close()
 	fout.Close()
-	fmt.Fprintf(os.Stderr, "%s: done\n", progname)
 }
-
 
 func main() {
 	run()
